@@ -9,6 +9,20 @@ int char_xor(char a, char b){
     else{return '1';}
 }
 
+void codeword_extend(char* codeword, int codeword_size, int datanum, int dataword_size){
+    int i;
+    //이진수 변환해서 앞쪽에 쓴다
+    for(i=dataword_size-1;i>=0;i--){
+        codeword[i]=datanum%2 + '0';
+        datanum=datanum/2;
+    }
+    /* extension for crc. 뒤쪽에 쓴다 */
+    for(i=dataword_size;i<codeword_size;i++){
+        codeword[i]='0';
+    }
+    codeword[codeword_size]='\0';
+}
+
 void make_codeword(char* extended_dataword, int extended_dataword_size, char* generator, int generator_size){
     int dataword_size=extended_dataword_size - generator_size + 1;
     int i,start,cur_xor_idx;
@@ -65,14 +79,15 @@ int main(int argc, char** argv) {
         printf("dataword size must be 4 or 8.\n");
         exit(1);
     }
-
+    //coded word는 개당 dataword_size + generator_size - 1 만큼의 크기
+    codeword_size=dataword_size + generator_size - 1;
     //입력 파일이 몇 글자인지
     input_file_length=0;
     while((cur= fgetc(input_file)) !=EOF){
         input_file_length++;
     }
-    printf("input file size : %d\n", input_file_length);
-    padding=(input_file_length*2) * 7; //coded word는 개당 7바이트가 된다
+    //printf("input file size : %d\n", input_file_length);
+    padding=(input_file_length * (dataword_size == 4 ? 2 : 1)) * (codeword_size);
     padding=8 - (padding % 8);
     padding=padding % 8;
     //printf("%d padding\n", padding);
@@ -85,72 +100,80 @@ int main(int argc, char** argv) {
 
     fseek(input_file, 0, SEEK_SET);
 
-    codeword_size=dataword_size + generator_size - 1;
     while((cur= fgetc(input_file)) !=EOF){
         /* 먼저 dataword_size가 4인 경우부터 한다 */
         int first_datanum, second_datanum;
         char* first_codeword, *second_codeword;
         int i,j;
         //printf("%d %d\n", cur/16, cur%16);
-        first_datanum=cur/16; //앞쪽 dataword
-        second_datanum=cur%16;
-        first_codeword=(char*)malloc(sizeof(char)*(dataword_size + generator_size));
-        second_codeword=(char*)malloc(sizeof(char)*(dataword_size + generator_size));
-        /* 입력받아서 둘로 나눈 후 이진수 변환 */
-        for(i=dataword_size-1;i>=0;i--){
-            first_codeword[i]=first_datanum%2 + '0';
-            first_datanum=first_datanum/2;
-        }
-        /* extension for crc */
-        for(i=dataword_size;i<codeword_size;i++){
-            first_codeword[i]='0';
-        }
-        first_codeword[codeword_size]='\0';
+        if(dataword_size==4){
+            first_datanum=cur/16; //앞쪽 dataword
+            second_datanum=cur%16;
+            first_codeword=(char*)malloc(sizeof(char)*(codeword_size + 1));
+            second_codeword=(char*)malloc(sizeof(char)*(codeword_size + 1));
 
-        for(i=dataword_size-1;i>=0;i--){
-            second_codeword[i]=second_datanum%2 + '0';
-            second_datanum=second_datanum/2;
-        }
-        for(i=dataword_size;i<codeword_size;i++){
-            second_codeword[i]='0';
-        }
-        second_codeword[codeword_size]='\0';
-        //printf("%s %s\n", first_dataword, second_dataword);
+            codeword_extend(first_codeword, codeword_size, first_datanum, dataword_size);
+            codeword_extend(second_codeword, codeword_size, second_datanum, dataword_size);
 
-        make_codeword(first_codeword, codeword_size, generator, generator_size);
-        make_codeword(second_codeword, codeword_size, generator, generator_size);
+            make_codeword(first_codeword, codeword_size, generator, generator_size);
+            make_codeword(second_codeword, codeword_size, generator, generator_size);
 
-        //이제 만들어진 codeword를 파일에 비트 단위로 써야 한다.
-        for(i=0;i<codeword_size;i++){
-            if(bit_index==8){
-                printf("%d\n",byte_to_write);
-                fwrite(&byte_to_write, 1, 1, output_file);
-                bit_index=0;
-                byte_to_write=0;
+            //이제 만들어진 codeword를 파일에 비트 단위로 써야 한다.
+            for(i=0;i<codeword_size;i++){
+                if(bit_index==8){
+                    printf("%d\n",byte_to_write);
+                    fwrite(&byte_to_write, 1, 1, output_file);
+                    bit_index=0;
+                    byte_to_write=0;
+                }
+                if(first_codeword[i]=='1'){
+                    byte_to_write = byte_to_write | (1<<(7-bit_index));
+                }
+                bit_index++;
             }
-            if(first_codeword[i]=='1'){
-                byte_to_write = byte_to_write | (1<<(7-bit_index));
+            for(i=0;i<codeword_size;i++){
+                if(bit_index==8){
+                    printf("%d\n", byte_to_write);
+                    fwrite(&byte_to_write, 1, 1, output_file);
+                    bit_index=0;
+                    byte_to_write=0;
+                }
+                if(second_codeword[i]=='1'){
+                    byte_to_write = byte_to_write | (1<<(7-bit_index));
+                }
+                bit_index++;
             }
-            bit_index++;
-        }
-        for(i=0;i<codeword_size;i++){
             if(bit_index==8){
                 printf("%d\n", byte_to_write);
                 fwrite(&byte_to_write, 1, 1, output_file);
                 bit_index=0;
                 byte_to_write=0;
             }
-            if(second_codeword[i]=='1'){
-                byte_to_write = byte_to_write | (1<<(7-bit_index));
+        }
+        else{
+            //dataword size is 8
+            first_datanum=cur;
+
+            first_codeword=(char*)malloc(sizeof(char)*(codeword_size + 1));
+
+            codeword_extend(first_codeword, codeword_size, first_datanum, dataword_size);
+            make_codeword(first_codeword, codeword_size, generator, generator_size);
+
+            for(i=0;i<codeword_size;i++){
+                if(bit_index==8){
+                    printf("%d\n",byte_to_write);
+                    fwrite(&byte_to_write, 1, 1, output_file);
+                    bit_index=0;
+                    byte_to_write=0;
+                }
+                if(first_codeword[i]=='1'){
+                    byte_to_write = byte_to_write | (1<<(7-bit_index));
+                }
+                bit_index++;
             }
-            bit_index++;
         }
-        if(bit_index==8){
-            printf("%d\n", byte_to_write);
-            fwrite(&byte_to_write, 1, 1, output_file);
-            bit_index=0;
-            byte_to_write=0;
-        }
+
+
     }
 
     return 0;
