@@ -57,7 +57,6 @@ int main(int argc, char** argv) {
     int dataword_size=strtol(argv[4], NULL, 10);
     int codeword_size;
     FILE* input_file, *output_file;
-    char input_encoded[100005];
     //char input_file_name[]="/home/sunghyun/CLionProjects/network/temp.tx";
     int cur;
     int input_file_length, padding;
@@ -172,8 +171,6 @@ int main(int argc, char** argv) {
                 bit_index++;
             }
         }
-
-
     }
 
     return 0;
