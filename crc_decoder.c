@@ -56,7 +56,7 @@ int main(int argc, char** argv){
     // 만약 dataword size가 4이면, 2개를 붙여서 디코딩해야 한다. 따라서 한 바이트가 다 채워졌는지를 나타내는 변수
     //1이면 다 채워져서 다른 바이트를 시작해야 한다는 뜻
     //0이면 1바이트의 반만 차 있는 상태
-    int byte_completed=1;
+    int byte_filled=0;
     char byte_to_write=0;
 
     input_file=fopen(input_file_name, "r");
@@ -79,7 +79,7 @@ int main(int argc, char** argv){
         exit(1);
     }
     fread(&padding_size, 1, 1, input_file);
-    printf("%d\n", padding_size);
+    //printf("%d\n", padding_size);
 
     //padding을 제외한 나머지 인코딩된 파일 길이 계산
     while((cur_byte= fgetc(input_file)) !=EOF){
@@ -98,6 +98,7 @@ int main(int argc, char** argv){
     char* current_codeword;
     cur_byte= fgetc(input_file);
     codeword_num++;
+    byte_filled=0;
     while(cur_byte!=EOF){
         current_codeword=(char*)malloc(codeword_size+1);
         for(i=0;i<codeword_size;i++){
@@ -125,24 +126,28 @@ int main(int argc, char** argv){
         if(check_codeword(current_codeword, codeword_size, generator, generator_size)){
             error_codeword_num++; //crc 코드 복원중 에러 발생.
         }
-
         if(dataword_size==4){
-            if(byte_completed==1){
-                for(i=0;i<dataword_size;i++){
-                    if(current_codeword[i]=='1'){
-                        byte_to_write+=(1 << (dataword_size - i - 1));
-                    }
-                }
-                byte_completed=0;
-                printf("%d\n", byte_to_write);
-            }
-            else{
+            if(byte_filled==0){
+                //첫 바이트를 채운다.
                 for(i=0;i<dataword_size;i++){
                     if(current_codeword[i]=='1'){
                         byte_to_write+=(1 << (dataword_size - i - 1 + 4));
                     }
                 }
-                byte_completed=0;
+                byte_filled+=4;
+            }
+            else{
+                //이미 반 차 있다.
+                for(i=0;i<dataword_size;i++){
+                    if(current_codeword[i]=='1'){
+                        byte_to_write+=(1 << (dataword_size - i - 1));
+                    }
+                }
+                fprintf(output_file,"%c", byte_to_write);
+                printf("now decoded : %d\n", byte_to_write);
+                byte_filled=0;
+                byte_to_write=0;
+
             }
         }
 
