@@ -32,7 +32,6 @@ int check_codeword(char* extended_dataword, int extended_dataword_size, char* ge
     /*for(i=dataword_size;i<extended_dataword_size;i++){
         extended_dataword[i]=remainder_word[i];
     }*/
-    printf("now remainder %s\n", remainder_word);
     free(remainder_word);
     return remainder;
 }
@@ -46,7 +45,7 @@ int main(int argc, char** argv){
     char* input_file_name, *output_file_name, *result_file_name, *generator;
     int generator_size, dataword_size, codeword_size;
     FILE* input_file, *output_file, *result_file;
-    char padding_size, cur_byte;
+    int padding_size, cur_byte;
     int bit_index, i;
     int input_file_length=0;
     // 만약 dataword size가 4이면, 2개를 붙여서 디코딩해야 한다. 따라서 한 바이트가 다 채워졌는지를 나타내는 변수
@@ -90,7 +89,7 @@ int main(int argc, char** argv){
     while(fread(&cur_byte, sizeof(cur_byte), 1, input_file)==1){
         input_file_length++;
     }
-    printf("%d\n", input_file_length);
+    //printf("%d\n", input_file_length);
 
     fseek(input_file, 0, SEEK_SET);
     fread(&padding_size, 1, 1, input_file);
@@ -107,10 +106,9 @@ int main(int argc, char** argv){
         current_codeword=(char*)malloc(codeword_size+1);
         for(i=0;i<codeword_size;i++){
             if(bit_index==8){
-                fread(&cur_byte, sizeof(cur_byte), 1, input_file);
+                cur_byte= fgetc(input_file);
                 if(cur_byte==EOF){
                     //현재 읽은 바이트가 파일 끝이면 다 읽은 것이다
-                    printf("encoded file reading done.\n");
                     break;
                 }
                 bit_index=0;
@@ -125,10 +123,9 @@ int main(int argc, char** argv){
         }
         if(cur_byte==EOF){break;}
         codeword_num++;
-        printf("codeword num %d ", codeword_num);
+        //printf("codeword num %d ", codeword_num);
         //널 문자 삽입
         current_codeword[codeword_size]='\0';
-        printf("%s ", current_codeword);
         if(check_codeword(current_codeword, codeword_size, generator, generator_size)){
             error_codeword_num++; //crc 코드 복원중 에러 발생.
         }
@@ -169,7 +166,6 @@ int main(int argc, char** argv){
         free(current_codeword);
     }
 
-    printf("%d %d\n", codeword_num, error_codeword_num);
     fprintf(result_file, "%d %d\n", codeword_num, error_codeword_num);
 
     fclose(input_file);

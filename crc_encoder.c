@@ -45,7 +45,7 @@ void make_codeword(char* extended_dataword, int extended_dataword_size, char* ge
     //끝에 널 문자.
     extended_dataword[extended_dataword_size]='\0';
     free(remainder_word);
-    //printf("%s\n", extended_dataword);
+    //printf("%s ", extended_dataword);
 }
 
 int main(int argc, char** argv) {
@@ -180,6 +180,12 @@ int main(int argc, char** argv) {
                     byte_to_write = byte_to_write | (1<<(7-bit_index));
                 }
                 bit_index++;
+            }
+            if(bit_index==8){
+                //printf("%d\n",byte_to_write);
+                fwrite(&byte_to_write, 1, 1, output_file);
+                bit_index=0;
+                byte_to_write=0;
             }
             free(first_codeword);
         }
