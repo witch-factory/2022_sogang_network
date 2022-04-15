@@ -97,7 +97,6 @@ int main(int argc, char** argv){
     int codeword_num=0, error_codeword_num=0;
     char* current_codeword;
     cur_byte= fgetc(input_file);
-    codeword_num++;
     byte_filled=0;
     while(cur_byte!=EOF){
         current_codeword=(char*)malloc(codeword_size+1);
@@ -121,6 +120,7 @@ int main(int argc, char** argv){
             bit_index++;
         }
         if(cur_byte==EOF){break;}
+        codeword_num++;
         current_codeword[codeword_size]='\0';
         printf("%s ", current_codeword);
         if(check_codeword(current_codeword, codeword_size, generator, generator_size)){
