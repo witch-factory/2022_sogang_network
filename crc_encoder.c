@@ -93,7 +93,8 @@ int main(int argc, char** argv) {
     fwrite(&padding, 1, 1, output_file);
 
     byte_to_write=0;
-    for(bit_index=0;bit_index<padding;bit_index++);
+    bit_index=padding;
+    //for(bit_index=0;bit_index<padding;bit_index++);
     //padding만큼의 왼쪽 비트 0으로 만들기. padding은 무조건 0보다 작다.
     //printf("byte to write : %d\n", byte_to_write);
 
