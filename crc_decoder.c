@@ -87,7 +87,7 @@ int main(int argc, char** argv){
 
     input_file_length=0;
     //padding을 제외한 나머지 인코딩된 파일 길이 계산
-    while((cur_byte= fgetc(input_file)) !=EOF){
+    while(fread(&cur_byte, sizeof(cur_byte), 1, input_file)==1){
         input_file_length++;
     }
     printf("%d\n", input_file_length);
@@ -107,7 +107,7 @@ int main(int argc, char** argv){
         current_codeword=(char*)malloc(codeword_size+1);
         for(i=0;i<codeword_size;i++){
             if(bit_index==8){
-                cur_byte= fgetc(input_file);
+                fread(&cur_byte, sizeof(cur_byte), 1, input_file);
                 if(cur_byte==EOF){
                     //현재 읽은 바이트가 파일 끝이면 다 읽은 것이다
                     printf("encoded file reading done.\n");
@@ -121,11 +121,12 @@ int main(int argc, char** argv){
             else{
                 current_codeword[i]='0';
             }
-
             bit_index++;
         }
         if(cur_byte==EOF){break;}
         codeword_num++;
+        printf("codeword num %d ", codeword_num);
+        //널 문자 삽입
         current_codeword[codeword_size]='\0';
         printf("%s ", current_codeword);
         if(check_codeword(current_codeword, codeword_size, generator, generator_size)){
