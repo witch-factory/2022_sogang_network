@@ -129,6 +129,7 @@ void process_message_file(){
     message_file_stream.open(message_file_name, ifstream::in);
     while(message_file_stream>>msg_source>>msg_dest){
         getline(message_file_stream, msg_message);
+        msg_message.erase(msg_message.begin()); //맨 앞의 띄어쓰기 제거
         cout<<msg_source<<" "<<msg_dest<<" "<<msg_message<<"\n";
 
         if(node_dist[msg_source][msg_dest]==max_dist){
