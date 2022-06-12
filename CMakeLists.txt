@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
-project(network C)
+project(network)
 
-set(CMAKE_C_STANDARD 90)
+set(CMAKE_CXX_STANDARD 14)
 
-add_executable(network crc_encoder.c crc_decoder.c)
+add_executable(network distvec.cc linkstate.cc)
