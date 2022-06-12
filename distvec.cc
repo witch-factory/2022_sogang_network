@@ -53,6 +53,7 @@ void change_edge(int s, int e, int c){
     for(i=0;i<len_e;i++){
         if(adj_list[e][i].first==s){
             adj_list[e][i].second=c;
+            edge_exist=1;
         }
     }
     if(edge_exist==0){
@@ -99,6 +100,14 @@ void bellman_ford(int start){
 }
 
 void make_routing_table(){
+    int i,j;
+    for(i=0;i<network_node_num;i++){
+        for(j=0;j<network_node_num;j++){
+            if(i==j){node_dist[i][j]=0;}
+            else{node_dist[i][j]=max_dist;}
+        }
+    }
+
     for(start_node=0;start_node<network_node_num;start_node++){
         bellman_ford(start_node);
         for(goal_node=0;goal_node<network_node_num;goal_node++){

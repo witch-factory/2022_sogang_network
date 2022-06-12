@@ -17,10 +17,10 @@ int network_node_num;
 int link_start, link_end, link_cost;
 int max_dist=INT_MAX/2;
 
-vector<vector<pair<int,int>> > adj_list;
+vector<vector<pair<int,int> > > adj_list;
 vector<vector<int> > prev_link;
 vector<vector<int> > node_dist;
-vector<vector<pair<int,int>> > routing_table;
+vector<vector<pair<int,int> > > routing_table;
 
 int msg_source, msg_dest;
 string msg_message;
@@ -31,8 +31,8 @@ int next_node_for_route;
 int change_node_start, change_node_goal, change_node_cost;
 
 void add_edge(int s, int e, int c){
-    adj_list[s].push_back({e,c});
-    adj_list[e].push_back({s,c});
+    adj_list[s].push_back(make_pair(e,c));
+    adj_list[e].push_back(make_pair(s,c));
 }
 
 void change_edge(int s, int e, int c){
@@ -80,25 +80,27 @@ void erase_edge(int s, int e){
 }
 
 void dijkstra(int start){
-    int i, cur, temp_next, temp_next_dist;
-    priority_queue<pair<int,int>> pq;
+    int i, cur, temp_next, temp_next_dist, len;
+    priority_queue<pair<int,int> > pq;
     vector<int> visited(network_node_num+1, 0);
     for(i=0;i<=network_node_num;i++){
         node_dist[start][i]=max_dist;
     }
     node_dist[start][start]=0;
     prev_link[start][start]=start;
-    pq.push({0, start});
+    pq.push(make_pair(0, start));
     while(!pq.empty()){
         cur=pq.top().second; pq.pop();
         if(visited[cur]){continue;}
         visited[cur]=1;
-        for(pair<int,int> p:adj_list[cur]){
+        len=adj_list[cur].size();
+        for(i=0;i<len;i++){
+            pair<int,int> p=adj_list[cur][i];
             temp_next=p.first; temp_next_dist=p.second;
             if(node_dist[start][temp_next] > node_dist[start][cur]+temp_next_dist){
                 prev_link[start][temp_next]=cur; //temp_next로 가기 위해서는 이전에 cur를 거쳐 와야 한다.
                 node_dist[start][temp_next] = node_dist[start][cur]+temp_next_dist;
-                pq.push({-node_dist[start][temp_next], temp_next});
+                pq.push(make_pair(-node_dist[start][temp_next], temp_next));
             }
         }
     }
@@ -110,7 +112,7 @@ void make_routing_table(){
         for(goal_node=0;goal_node<network_node_num;goal_node++){
             if(start_node==goal_node){
                 printf("%d %d %d\n", start_node, goal_node, 0);
-                routing_table[start_node][goal_node]={goal_node,0};
+                routing_table[start_node][goal_node]= make_pair(goal_node,0);
                 //start node에서 goal node로 가려면 다음으로 route 노드 지나야 하고 총 거리는 0이다
             }
             else{
@@ -118,7 +120,7 @@ void make_routing_table(){
                 while(prev_link[start_node][next_node_for_route]!=start_node){
                     next_node_for_route=prev_link[start_node][next_node_for_route];
                 }
-                routing_table[start_node][goal_node]={next_node_for_route, node_dist[start_node][goal_node]};
+                routing_table[start_node][goal_node]= make_pair(next_node_for_route, node_dist[start_node][goal_node]);
                 printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
             }
         }
