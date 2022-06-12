@@ -13,8 +13,9 @@ FILE * topology_file, *message_file, *changes_file;
 int network_node_num;
 int link_start, link_end, link_cost;
 int max_dist=INT_MAX;
+
 vector<vector<pair<int,int>> > adj_list;
-vector<vector<int> > next_link;
+vector<vector<int> > prev_link;
 vector<vector<int> > node_dist;
 
 void add_edge(int s, int e, int c){
@@ -38,7 +39,7 @@ void dijkstra(int start){
         for(pair<int,int> p:adj_list[cur]){
             temp_next=p.first; temp_next_dist=p.second;
             if(node_dist[start][temp_next] > node_dist[start][cur]+temp_next_dist){
-                next_link[start][temp_next]=cur; //temp_next로 가기 위해서는 다음 노드로 cur 거쳐야
+                prev_link[start][temp_next]=cur; //temp_next로 가기 위해서는 이전에 cur를 거쳐 와야 한다.
                 node_dist[start][temp_next] = node_dist[start][cur]+temp_next_dist;
                 pq.push({-node_dist[start][temp_next], temp_next});
             }
@@ -53,6 +54,8 @@ int main(int argc, char** argv){
     }
 
     int i,j;
+    int start_node, goal_node;
+    int next_node_for_route;
 
     topology_file_name=argv[1];
     message_file_name=argv[2];
@@ -66,22 +69,32 @@ int main(int argc, char** argv){
     fscanf(topology_file, "%d", &network_node_num);
 
     adj_list.resize(network_node_num+1);
-    next_link.resize(network_node_num+1);
+    prev_link.resize(network_node_num+1);
     node_dist.resize(network_node_num+1);
     for(i=0;i<=network_node_num;i++){
-        next_link[i].resize(network_node_num+1);
+        prev_link[i].resize(network_node_num+1);
         node_dist[i].resize(network_node_num+1);
     }
     while(fscanf(topology_file, "%d %d %d", &link_start, &link_end, &link_cost)!=EOF){
         add_edge(link_start, link_end, link_cost);
     }
-    for(i=0;i<network_node_num;i++){
-        dijkstra(i);
-        for(j=0;j<network_node_num;j++){
-            printf("%d %d %d\n", j, next_link[i][j], node_dist[i][j]);
+
+    for(start_node=0;start_node<network_node_num;start_node++){
+        dijkstra(start_node);
+        for(goal_node=0;goal_node<network_node_num;goal_node++){
+            if(start_node==goal_node){
+                printf("%d %d %d\n", start_node, goal_node, 0);
+            }
+            else{
+                next_node_for_route=goal_node;
+                while(prev_link[start_node][next_node_for_route]!=start_node){
+                    next_node_for_route=prev_link[start_node][next_node_for_route];
+                }
+                printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
+            }
         }
         printf("\n");
     }
-
+    
     return 0;
 }
