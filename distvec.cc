@@ -17,10 +17,10 @@ int link_start, link_end, link_cost;
 int max_dist=INT_MAX/2;
 int path_length;
 
-vector<vector<pair<int,int>> > adj_list;
+vector<vector<pair<int,int> > > adj_list;
 vector<vector<int> > prev_link;
 vector<vector<int> > node_dist;
-vector<vector<pair<int,int>> > routing_table;
+vector<vector<pair<int,int> > > routing_table;
 
 int msg_source, msg_dest;
 string msg_message;
@@ -33,8 +33,8 @@ int change_node_start, change_node_goal, change_node_cost;
 int edge_dest, edge_cost;
 
 void add_edge(int s, int e, int c){
-    adj_list[s].push_back({e,c});
-    adj_list[e].push_back({s,c});
+    adj_list[s].push_back(make_pair(e,c));
+    adj_list[e].push_back(make_pair(s,c));
 }
 
 void change_edge(int s, int e, int c){
@@ -82,11 +82,13 @@ void erase_edge(int s, int e){
 }
 
 void bellman_ford(int start){
+    int len,i;
     node_dist[start][start]=0;
     for(path_length=0;path_length<network_node_num-1;path_length++){
         for(cur_node=0;cur_node<network_node_num;cur_node++){
-            for(pair<int,int> p:adj_list[cur_node]){
-                edge_dest=p.first; edge_cost=p.second;
+            len=adj_list[cur_node].size();
+            for(i=0;i<len;i++){
+                edge_dest=adj_list[cur_node][i].first; edge_cost=adj_list[cur_node][i].second;
                 if(node_dist[start][cur_node]!=max_dist && node_dist[start][edge_dest] > node_dist[start][cur_node] + edge_cost){
                     node_dist[start][edge_dest]=node_dist[start][cur_node] + edge_cost;
                     prev_link[start][edge_dest]=cur_node;
@@ -102,7 +104,7 @@ void make_routing_table(){
         for(goal_node=0;goal_node<network_node_num;goal_node++){
             if(start_node==goal_node){
                 printf("%d %d %d\n", start_node, goal_node, 0);
-                routing_table[start_node][goal_node]={goal_node,0};
+                routing_table[start_node][goal_node]= make_pair(goal_node,0);
                 //start node에서 goal node로 가려면 다음으로 route 노드 지나야 하고 총 거리는 0이다
             }
             else{
@@ -111,7 +113,7 @@ void make_routing_table(){
                     //cout<<next_node_for_route<<"\n";
                     next_node_for_route=prev_link[start_node][next_node_for_route];
                 }
-                routing_table[start_node][goal_node]={next_node_for_route, node_dist[start_node][goal_node]};
+                routing_table[start_node][goal_node]= make_pair(next_node_for_route, node_dist[start_node][goal_node]);
                 printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
             }
         }
@@ -190,6 +192,7 @@ int main(int argc, char** argv){
     process_message_file();
 
     changes_file_stream.open(changes_file_name, ifstream::in);
+
     while(changes_file_stream>>change_node_start>>change_node_goal>>change_node_cost){
         if(change_node_cost==-999){
             erase_edge(change_node_start, change_node_goal);
