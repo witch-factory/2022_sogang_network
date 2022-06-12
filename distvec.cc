@@ -112,8 +112,9 @@ void make_routing_table(){
         bellman_ford(start_node);
         for(goal_node=0;goal_node<network_node_num;goal_node++){
             if(start_node==goal_node){
-                printf("%d %d %d\n", start_node, goal_node, 0);
                 routing_table[start_node][goal_node]= make_pair(goal_node,0);
+                printf("%d %d %d\n", start_node, goal_node, 0);
+
                 //start node에서 goal node로 가려면 다음으로 route 노드 지나야 하고 총 거리는 0이다
             }
             else{
@@ -122,8 +123,13 @@ void make_routing_table(){
                     //cout<<next_node_for_route<<"\n";
                     next_node_for_route=prev_link[start_node][next_node_for_route];
                 }
+
                 routing_table[start_node][goal_node]= make_pair(next_node_for_route, node_dist[start_node][goal_node]);
-                printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
+                if(node_dist[start_node][goal_node]!=max_dist){
+                    //라우팅 테이블에 경로가 없으면 출력하지 않는다.
+                    printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
+                }
+
             }
         }
         printf("\n");
