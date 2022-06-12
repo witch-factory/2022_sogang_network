@@ -108,7 +108,7 @@ void make_routing_table(){
             else{
                 next_node_for_route=goal_node;
                 while(prev_link[start_node][next_node_for_route]!=start_node){
-                    cout<<next_node_for_route<<"\n";
+                    //cout<<next_node_for_route<<"\n";
                     next_node_for_route=prev_link[start_node][next_node_for_route];
                 }
                 routing_table[start_node][goal_node]={next_node_for_route, node_dist[start_node][goal_node]};
@@ -158,9 +158,6 @@ int main(int argc, char** argv){
 
     while(topology_file_stream>>link_start>>link_end>>link_cost){
         add_edge(link_start, link_end, link_cost);
-        node_dist[link_start][link_end]=link_cost;
-        node_dist[link_end][link_start]=link_cost;
-        //초기에 이웃한 간선과의 거리는 라우팅 테이블에 저장한다
     }
     topology_file_stream.close();
 
