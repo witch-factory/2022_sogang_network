@@ -15,7 +15,7 @@ FILE * topology_file, *message_file, *changes_file;
 ifstream topology_file_stream, message_file_stream, changes_file_stream;
 int network_node_num;
 int link_start, link_end, link_cost;
-int max_dist=INT_MAX;
+int max_dist=INT_MAX/2;
 
 vector<vector<pair<int,int>> > adj_list;
 vector<vector<int> > prev_link;
@@ -87,6 +87,7 @@ void dijkstra(int start){
         node_dist[start][i]=max_dist;
     }
     node_dist[start][start]=0;
+    prev_link[start][start]=start;
     pq.push({0, start});
     while(!pq.empty()){
         cur=pq.top().second; pq.pop();
@@ -155,7 +156,7 @@ int main(int argc, char** argv){
         exit(1);
     }
 
-    int i,j;
+    int i;
 
     topology_file_name=argv[1];
     message_file_name=argv[2];
