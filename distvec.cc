@@ -119,6 +119,30 @@ void make_routing_table(){
     }
 }
 
+void process_message_file(){
+    message_file_stream.open(message_file_name, ifstream::in);
+    while(message_file_stream>>msg_source>>msg_dest){
+        getline(message_file_stream, msg_message);
+        msg_message.erase(msg_message.begin()); //맨 앞의 띄어쓰기 제거
+        cout<<msg_source<<" "<<msg_dest<<" "<<msg_message<<"\n";
+
+        if(node_dist[msg_source][msg_dest]==max_dist){
+            cout<<"from "<<msg_source<<" to "<<msg_dest<<" cost infinite hops unreachable message "<<msg_message<<"\n";
+        }
+        else{
+            cout<<"from "<<msg_source<<" to "<<msg_dest<<" cost "<<node_dist[msg_source][msg_dest]<<" hops ";
+            cur_node=msg_source;
+            while(cur_node!=msg_dest){
+                cout<<cur_node<<" ";
+                cur_node=routing_table[cur_node][msg_dest].first;
+            }
+            cout<<"message "<<msg_message<<"\n";
+        }
+
+    }
+    message_file_stream.close();
+}
+
 int main(int argc, char** argv){
     if(argc!=4){
         printf("usage: distvec topologyfile messagesfile changesfile\n");
@@ -162,6 +186,23 @@ int main(int argc, char** argv){
     topology_file_stream.close();
 
     make_routing_table();
+
+    process_message_file();
+
+    changes_file_stream.open(changes_file_name, ifstream::in);
+    while(changes_file_stream>>change_node_start>>change_node_goal>>change_node_cost){
+        if(change_node_cost==-999){
+            erase_edge(change_node_start, change_node_goal);
+        }
+        else{
+            change_edge(change_node_start, change_node_goal, change_node_cost);
+        }
+        make_routing_table();
+
+        process_message_file();
+
+    }
+    changes_file_stream.close();
 
     return 0;
 }
