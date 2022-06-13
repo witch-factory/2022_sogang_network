@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cstdlib>
 #include <queue>
 #include <climits>
 #include <string>
@@ -135,11 +136,11 @@ void make_routing_table(){
     }
 
     if(file_opened==0){
-        output_file_stream.open(output_file_name, ofstream::out);
+        output_file_stream.open(output_file_name.c_str(), ofstream::out);
         file_opened=1;
     }
     else{
-        output_file_stream.open(output_file_name, ofstream::app);
+        output_file_stream.open(output_file_name.c_str(), ofstream::app);
     }
 
     for(path_length=0;path_length<network_node_num-1;path_length++){
@@ -182,11 +183,11 @@ void make_routing_table(){
 
 void process_message_file(){
     message_file_stream.open(message_file_name, ifstream::in);
-    output_file_stream.open(output_file_name, ofstream::app);
+    output_file_stream.open(output_file_name.c_str(), ofstream::app);
     while(message_file_stream>>msg_source>>msg_dest){
         getline(message_file_stream, msg_message);
         msg_message.erase(msg_message.begin()); //맨 앞의 띄어쓰기 제거
-        cout<<msg_source<<" "<<msg_dest<<" "<<msg_message<<"\n";
+        //cout<<msg_source<<" "<<msg_dest<<" "<<msg_message<<"\n";
 
         if(routing_table[msg_source][msg_dest].second==max_dist){
             output_file_stream<<"from "<<msg_source<<" to "<<msg_dest<<" cost infinite hops unreachable message "<<msg_message<<"\n";
@@ -217,7 +218,7 @@ int main(int argc, char** argv){
     topology_file_name=argv[1];
     message_file_name=argv[2];
     changes_file_name=argv[3];
-    output_file_name="output_dv1.txt";
+    output_file_name="output_dv.txt";
 
     /* topology 입력받기 */
     topology_file_stream.open(topology_file_name, ifstream::in);

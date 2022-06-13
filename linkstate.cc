@@ -2,6 +2,7 @@
 #include <vector>
 #include <queue>
 #include <climits>
+#include <cstdlib>
 #include <string>
 #include <fstream>
 using namespace std;
@@ -116,11 +117,11 @@ void dijkstra(int start){
 
 void make_routing_table(){
     if(output_file_opened==0){
-        output_file_stream.open(output_file_name, ofstream::out);
+        output_file_stream.open(output_file_name.c_str(), ofstream::out);
         output_file_opened=1;
     }
     else{
-        output_file_stream.open(output_file_name, ofstream::app);
+        output_file_stream.open(output_file_name.c_str(), ofstream::app);
     }
 
     for(start_node=0;start_node<network_node_num;start_node++){
@@ -152,7 +153,7 @@ void make_routing_table(){
 
 void process_message_file(){
     message_file_stream.open(message_file_name, ifstream::in);
-    output_file_stream.open(output_file_name, ofstream::app);
+    output_file_stream.open(output_file_name.c_str(), ofstream::app);
 
     while(message_file_stream>>msg_source>>msg_dest){
         getline(message_file_stream, msg_message);
