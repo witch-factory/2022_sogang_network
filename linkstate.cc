@@ -1,6 +1,4 @@
 #include <iostream>
-#include <stdlib.h>
-#include <string.h>
 #include <vector>
 #include <queue>
 #include <climits>
@@ -11,8 +9,11 @@ using namespace std;
 char* topology_file_name;
 char* message_file_name;
 char* changes_file_name;
+string output_file_name;
 FILE * topology_file, *message_file, *changes_file;
 ifstream topology_file_stream, message_file_stream, changes_file_stream;
+ofstream output_file_stream;
+int output_file_opened=0;
 int network_node_num;
 int link_start, link_end, link_cost;
 int max_dist=INT_MAX/2;
@@ -88,9 +89,10 @@ void dijkstra(int start){
     }
     node_dist[start][start]=0;
     prev_link[start][start]=start;
-    pq.push(make_pair(0, start));
+    pq.push(make_pair(0, -start));
+    //dist 가장 작은 노드가 여러 개면 id값이 작은 것부터 뺀다.
     while(!pq.empty()){
-        cur=pq.top().second; pq.pop();
+        cur=-pq.top().second; pq.pop();
         if(visited[cur]){continue;}
         visited[cur]=1;
         len=adj_list[cur].size();
@@ -100,19 +102,34 @@ void dijkstra(int start){
             if(node_dist[start][temp_next] > node_dist[start][cur]+temp_next_dist){
                 prev_link[start][temp_next]=cur; //temp_next로 가기 위해서는 이전에 cur를 거쳐 와야 한다.
                 node_dist[start][temp_next] = node_dist[start][cur]+temp_next_dist;
-                pq.push(make_pair(-node_dist[start][temp_next], temp_next));
+                pq.push(make_pair(-node_dist[start][temp_next], -temp_next));
+            }
+            else if(node_dist[start][temp_next] > node_dist[start][cur]+temp_next_dist){
+                //tie breaking. dist 같은 parent 여러 개면 id값이 작은 노드를 선택한다.
+                prev_link[start][temp_next]=min(prev_link[start][temp_next], cur);
+                node_dist[start][temp_next] = node_dist[start][cur]+temp_next_dist;
+                pq.push(make_pair(-node_dist[start][temp_next], -temp_next));
             }
         }
     }
 }
 
 void make_routing_table(){
+    if(output_file_opened==0){
+        output_file_stream.open(output_file_name, ofstream::out);
+        output_file_opened=1;
+    }
+    else{
+        output_file_stream.open(output_file_name, ofstream::app);
+    }
+
     for(start_node=0;start_node<network_node_num;start_node++){
         dijkstra(start_node);
         for(goal_node=0;goal_node<network_node_num;goal_node++){
             if(start_node==goal_node){
                 routing_table[start_node][goal_node]= make_pair(goal_node,0);
-                printf("%d %d %d\n", start_node, goal_node, 0);
+                output_file_stream<<start_node<<" "<<goal_node<<" "<<0<<"\n";
+                //printf("%d %d %d\n", start_node, goal_node, 0);
                 //start node에서 goal node로 가려면 다음으로 route 노드 지나야 하고 총 거리는 0이다
             }
             else{
@@ -123,36 +140,41 @@ void make_routing_table(){
                 routing_table[start_node][goal_node]= make_pair(next_node_for_route, node_dist[start_node][goal_node]);
                 if(node_dist[start_node][goal_node]!=max_dist){
                     //라우팅 테이블에 경로가 없으면 출력하지 않는다.
-                    printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
+                    output_file_stream<<goal_node<<" "<<next_node_for_route<<" "<<node_dist[start_node][goal_node]<<"\n";
+                    //printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
                 }
             }
         }
-        printf("\n");
+        output_file_stream<<"\n";
     }
+    output_file_stream.close();
 }
 
 void process_message_file(){
     message_file_stream.open(message_file_name, ifstream::in);
+    output_file_stream.open(output_file_name, ofstream::app);
+
     while(message_file_stream>>msg_source>>msg_dest){
         getline(message_file_stream, msg_message);
         msg_message.erase(msg_message.begin()); //맨 앞의 띄어쓰기 제거
-        cout<<msg_source<<" "<<msg_dest<<" "<<msg_message<<"\n";
+        //cout<<msg_source<<" "<<msg_dest<<" "<<msg_message<<"\n";
 
         if(node_dist[msg_source][msg_dest]==max_dist){
-            cout<<"from "<<msg_source<<" to "<<msg_dest<<" cost infinite hops unreachable message "<<msg_message<<"\n";
+            output_file_stream<<"from "<<msg_source<<" to "<<msg_dest<<" cost infinite hops unreachable message "<<msg_message<<"\n";
         }
         else{
-            cout<<"from "<<msg_source<<" to "<<msg_dest<<" cost "<<node_dist[msg_source][msg_dest]<<" hops ";
+            output_file_stream<<"from "<<msg_source<<" to "<<msg_dest<<" cost "<<node_dist[msg_source][msg_dest]<<" hops ";
             cur_node=msg_source;
             while(cur_node!=msg_dest){
-                cout<<cur_node<<" ";
+                output_file_stream<<cur_node<<" ";
                 cur_node=routing_table[cur_node][msg_dest].first;
             }
-            cout<<"message "<<msg_message<<"\n";
+            output_file_stream<<"message "<<msg_message<<"\n";
         }
-
     }
+    output_file_stream<<"\n";
     message_file_stream.close();
+    output_file_stream.close();
 }
 
 int main(int argc, char** argv){
@@ -166,6 +188,7 @@ int main(int argc, char** argv){
     topology_file_name=argv[1];
     message_file_name=argv[2];
     changes_file_name=argv[3];
+    output_file_name="output_ls.txt";
 
     topology_file_stream.open(topology_file_name, ifstream::in);
     if(topology_file_stream.fail()){
