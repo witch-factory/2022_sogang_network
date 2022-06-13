@@ -130,7 +130,6 @@ void make_routing_table(){
             if(start_node==goal_node){
                 routing_table[start_node][goal_node]= make_pair(goal_node,0);
                 output_file_stream<<start_node<<" "<<goal_node<<" "<<0<<"\n";
-                printf("%d %d %d\n", start_node, goal_node, 0);
                 //start node에서 goal node로 가려면 다음으로 route 노드 지나야 하고 총 거리는 0이다
             }
             else{
@@ -144,11 +143,9 @@ void make_routing_table(){
                 if(node_dist[start_node][goal_node]!=max_dist){
                     //라우팅 테이블에 경로가 없으면 출력하지 않는다.
                     output_file_stream<<goal_node<<" "<<next_node_for_route<<" "<<node_dist[start_node][goal_node]<<"\n";
-                    printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
                 }
             }
         }
-        printf("\n");
         output_file_stream<<"\n";
     }
     output_file_stream.close();
