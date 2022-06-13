@@ -21,8 +21,6 @@ int path_length;
 int file_opened=0;
 
 vector<vector<pair<int,int> > > adj_list;
-vector<vector<int> > prev_link;
-vector<vector<int> > node_dist;
 vector<vector<pair<int,int> > > routing_table;
 
 int msg_source, msg_dest;
@@ -86,10 +84,10 @@ void erase_edge(int s, int e){
 }
 
 void bellman_ford(){
-    int i,j,neighbor_num;
-    int sending_node, next_node;
+    int i,neighbor_num;
+    int sending_node;
     int neighbor_route;
-    //start의 라우팅 테이블 업데이트
+
     for(path_length=0;path_length<network_node_num-1;path_length++){
         //path_length만큼의 경로를 가지는 최단 경로를 라우팅 테이블에 모두 업데이트한다.
 
@@ -118,25 +116,20 @@ void bellman_ford(){
         }
     }
 
-    for(i=0;i<network_node_num;i++){
-        for(j=0;j<network_node_num;j++){
-            cout<<j<<" "<<routing_table[i][j].first<<" "<<routing_table[i][j].second<<"\n";
-        }
-        cout<<"\n";
-    }
 }
 
 void make_routing_table(){
     int i,j;
+    int neighbor_num;
+    int sending_node;
+    int neighbor_route;
 
     for(i=0;i<network_node_num;i++){
         for(j=0;j<network_node_num;j++){
             if(i==j){
-                node_dist[i][j]=0;
-                routing_table[i][j]= make_pair(max_dist,0);
+                routing_table[i][j]= make_pair(i,0);
             }
             else{
-                node_dist[i][j]=max_dist;
                 routing_table[i][j]= make_pair(max_dist,max_dist);
             }
 
@@ -150,31 +143,39 @@ void make_routing_table(){
     else{
         output_file_stream.open(output_file_name, ofstream::app);
     }
-    bellman_ford();
-    for(start_node=0;start_node<network_node_num;start_node++){
-        //bellman_ford(start_node);
-        for(goal_node=0;goal_node<network_node_num;goal_node++){
-            if(start_node==goal_node){
-                routing_table[start_node][goal_node]= make_pair(goal_node,0);
-                output_file_stream<<start_node<<" "<<start_node<<" "<<0<<"\n";
-                //printf("%d %d %d\n", start_node, goal_node, 0);
 
-                //start node에서 goal node로 가려면 다음으로 route 노드 지나야 하고 총 거리는 0이다
-            }
-            else{
-                /*while(prev_link[start_node][next_node_for_route]!=start_node){
-                    //cout<<next_node_for_route<<"\n";
-                    next_node_for_route=prev_link[start_node][next_node_for_route];
-                }*/
-                output_file_stream<<goal_node<<" "<<routing_table[start_node][goal_node].first<<" "<<routing_table[start_node][goal_node].second<<"\n";
-                //routing_table[start_node][goal_node]= make_pair(next_node_for_route, node_dist[start_node][goal_node]);
-                /*if(node_dist[start_node][goal_node]!=max_dist){
-                    //라우팅 테이블에 경로가 없으면 출력하지 않는다.
-                    output_file_stream<<goal_node<<" "<<next_node_for_route<<" "<<node_dist[start_node][goal_node]<<"\n";
-                    //printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
-                }*/
+    for(path_length=0;path_length<network_node_num-1;path_length++){
+        //path_length만큼의 경로를 가지는 최단 경로를 라우팅 테이블에 모두 업데이트한다.
+
+        for(sending_node=0;sending_node<network_node_num;sending_node++){
+            //sending_node의 라우팅 테이블을 이웃들에게 뿌린다
+            neighbor_num=adj_list[sending_node].size();
+            for(i=0;i<neighbor_num;i++){
+                edge_dest=adj_list[sending_node][i].first;
+                edge_cost=adj_list[sending_node][i].second;
+                //cout<<edge_dest<<" "<<edge_cost<<"\n";
+                //sending 노드의 이웃의 라우팅 테이블 업데이트
+                for(neighbor_route=0;neighbor_route<network_node_num;neighbor_route++){
+                    //edge_dest의 라우팅 테이블 업데이트
+                    if(routing_table[edge_dest][neighbor_route].second > edge_cost + routing_table[sending_node][neighbor_route].second){
+                        //sending node를 거쳐 가면 더 빠르게 갈 수 있는 경우
+                        routing_table[edge_dest][neighbor_route].second=routing_table[sending_node][neighbor_route].second + edge_cost;
+                        routing_table[edge_dest][neighbor_route].first=sending_node;
+                    }
+                    else if(routing_table[edge_dest][neighbor_route].second == routing_table[sending_node][neighbor_route].second + edge_cost){
+                        //for the tie breaking
+                        //더 id값이 작은 노드를 다음 노드로 선택한다.
+                        routing_table[edge_dest][neighbor_route].first=min(routing_table[edge_dest][neighbor_route].first, sending_node);
+                    }
+                }
 
             }
+        }
+    }
+
+    for(i=0;i<network_node_num;i++){
+        for(j=0;j<network_node_num;j++){
+            output_file_stream<<j<<" "<<routing_table[i][j].first<<" "<<routing_table[i][j].second<<"\n";
         }
         output_file_stream<<"\n";
     }
@@ -189,11 +190,11 @@ void process_message_file(){
         msg_message.erase(msg_message.begin()); //맨 앞의 띄어쓰기 제거
         cout<<msg_source<<" "<<msg_dest<<" "<<msg_message<<"\n";
 
-        if(node_dist[msg_source][msg_dest]==max_dist){
+        if(routing_table[msg_source][msg_dest].second==max_dist){
             output_file_stream<<"from "<<msg_source<<" to "<<msg_dest<<" cost infinite hops unreachable message "<<msg_message<<"\n";
         }
         else{
-            output_file_stream<<"from "<<msg_source<<" to "<<msg_dest<<" cost "<<node_dist[msg_source][msg_dest]<<" hops ";
+            output_file_stream<<"from "<<msg_source<<" to "<<msg_dest<<" cost "<<routing_table[msg_source][msg_dest].second<<" hops ";
             cur_node=msg_source;
             while(cur_node!=msg_dest){
                 output_file_stream<<cur_node<<" ";
@@ -229,23 +230,17 @@ int main(int argc, char** argv){
     topology_file_stream>>network_node_num;
 
     adj_list.resize(network_node_num+1);
-    prev_link.resize(network_node_num+1);
-    node_dist.resize(network_node_num+1);
     routing_table.resize(network_node_num+1);
     for(i=0;i<=network_node_num;i++){
-        prev_link[i].resize(network_node_num+1);
-        node_dist[i].resize(network_node_num+1);
         routing_table[i].resize(network_node_num+1);
     }
 
     for(i=0;i<network_node_num;i++){
         for(j=0;j<network_node_num;j++){
             if(i==j){
-                node_dist[i][j]=0;
                 routing_table[i][j]= make_pair(max_dist,0);
             }
             else{
-                node_dist[i][j]=max_dist;
                 routing_table[i][j]= make_pair(max_dist,max_dist);
             }
 
@@ -258,8 +253,7 @@ int main(int argc, char** argv){
         //각 정점의 이웃 정점까지만 라우팅 테이블 업데이트
         routing_table[link_start][link_end]=make_pair(link_end, link_cost); //next, cost
         routing_table[link_end][link_start]=make_pair(link_start, link_cost);
-        node_dist[link_start][link_end]=link_cost;
-        node_dist[link_end][link_start]=link_cost;
+
     }
 
     //토폴로지는 정상적으로 읽어지고 direct neighbor와의 거리도 라우팅 테이블에 잘 갱신된다.

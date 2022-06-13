@@ -28,8 +28,8 @@
 3 3 1
 4 4 0
 
-from 1 to 0 cost infinite hops unreachable message here is a message from 1 to 0
-from 2 to 4 cost infinite hops unreachable message this one gets sent from 2 to 4!
+from 1 to 0 cost 6 hops 1 4 3 message here is a message from 1 to 0
+from 2 to 4 cost 7 hops 2 1 message this one gets sent from 2 to 4!
 
 0 0 0
 1 3 2
@@ -61,8 +61,8 @@ from 2 to 4 cost infinite hops unreachable message this one gets sent from 2 to 
 3 3 1
 4 4 0
 
-from 1 to 0 cost infinite hops unreachable message here is a message from 1 to 0
-from 2 to 4 cost infinite hops unreachable message this one gets sent from 2 to 4!
+from 1 to 0 cost 2 hops 1 3 message here is a message from 1 to 0
+from 2 to 4 cost 5 hops 2 1 3 message this one gets sent from 2 to 4!
 
 0 0 0
 1 3 6
@@ -94,6 +94,6 @@ from 2 to 4 cost infinite hops unreachable message this one gets sent from 2 to 
 3 3 1
 4 4 0
 
-from 1 to 0 cost infinite hops unreachable message here is a message from 1 to 0
-from 2 to 4 cost infinite hops unreachable message this one gets sent from 2 to 4!
+from 1 to 0 cost 6 hops 1 4 3 message here is a message from 1 to 0
+from 2 to 4 cost 7 hops 2 1 message this one gets sent from 2 to 4!
 
