@@ -89,7 +89,7 @@ void dijkstra(int start){
         node_dist[start][i]=max_dist;
     }
     node_dist[start][start]=0;
-    //prev_link[start][start]=-1;
+    prev_link[start][start]=start;
     pq.push(make_pair(0, -start));
     //dist 가장 작은 노드가 여러 개면 id값이 작은 것부터 뺀다.
     while(!pq.empty()){
@@ -130,10 +130,12 @@ void make_routing_table(){
             if(start_node==goal_node){
                 routing_table[start_node][goal_node]= make_pair(goal_node,0);
                 output_file_stream<<start_node<<" "<<goal_node<<" "<<0<<"\n";
-                //printf("%d %d %d\n", start_node, goal_node, 0);
+                printf("%d %d %d\n", start_node, goal_node, 0);
                 //start node에서 goal node로 가려면 다음으로 route 노드 지나야 하고 총 거리는 0이다
             }
             else{
+                //애초에 도달 불가능한 건 하지 않는다
+                if(node_dist[start_node][goal_node]==max_dist){continue;}
                 next_node_for_route=goal_node;
                 while(prev_link[start_node][next_node_for_route]!=start_node){
                     next_node_for_route=prev_link[start_node][next_node_for_route];
@@ -146,6 +148,7 @@ void make_routing_table(){
                 }
             }
         }
+        printf("\n");
         output_file_stream<<"\n";
     }
     output_file_stream.close();
