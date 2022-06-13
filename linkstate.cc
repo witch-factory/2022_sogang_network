@@ -89,7 +89,7 @@ void dijkstra(int start){
         node_dist[start][i]=max_dist;
     }
     node_dist[start][start]=0;
-    prev_link[start][start]=start;
+    //prev_link[start][start]=-1;
     pq.push(make_pair(0, -start));
     //dist 가장 작은 노드가 여러 개면 id값이 작은 것부터 뺀다.
     while(!pq.empty()){
@@ -105,7 +105,7 @@ void dijkstra(int start){
                 node_dist[start][temp_next] = node_dist[start][cur]+temp_next_dist;
                 pq.push(make_pair(-node_dist[start][temp_next], -temp_next));
             }
-            else if(node_dist[start][temp_next] > node_dist[start][cur]+temp_next_dist){
+            else if(node_dist[start][temp_next] == node_dist[start][cur]+temp_next_dist){
                 //tie breaking. dist 같은 parent 여러 개면 id값이 작은 노드를 선택한다.
                 prev_link[start][temp_next]=min(prev_link[start][temp_next], cur);
                 node_dist[start][temp_next] = node_dist[start][cur]+temp_next_dist;
@@ -142,7 +142,7 @@ void make_routing_table(){
                 if(node_dist[start_node][goal_node]!=max_dist){
                     //라우팅 테이블에 경로가 없으면 출력하지 않는다.
                     output_file_stream<<goal_node<<" "<<next_node_for_route<<" "<<node_dist[start_node][goal_node]<<"\n";
-                    //printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
+                    printf("%d %d %d\n", goal_node, next_node_for_route, node_dist[start_node][goal_node]);
                 }
             }
         }

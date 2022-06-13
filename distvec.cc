@@ -174,6 +174,7 @@ void make_routing_table(){
 
     for(i=0;i<network_node_num;i++){
         for(j=0;j<network_node_num;j++){
+            if(routing_table[i][j].second==max_dist){ continue;}
             output_file_stream<<j<<" "<<routing_table[i][j].first<<" "<<routing_table[i][j].second<<"\n";
         }
         output_file_stream<<"\n";
